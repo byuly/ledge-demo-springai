@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Code Whisperer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #00ff41;
+      font-family: "Courier New", Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 10px #00ff41;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: #558c55;
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+      letter-spacing: 0.1em;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 800px;
+      background: #111;
+      border: 1px solid #1a4a1a;
+      border-radius: 4px;
+      padding: 1.5rem;
+    }
+
+    label {
+      display: block;
+      color: #558c55;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid #1a4a1a;
+      color: #00ff41;
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 3px;
+      margin-bottom: 1rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: #00ff41; }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: #0a0a0a;
+      border: 1px solid #1a4a1a;
+      color: #00ff41;
+      font-family: inherit;
+      font-size: 0.82rem;
+      padding: 0.75rem;
+      border-radius: 3px;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    textarea:focus { border-color: #00ff41; }
+
+    .btn-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      flex: 1;
+      background: transparent;
+      border: 1px solid #00ff41;
+      color: #00ff41;
+      font-family: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      padding: 0.6rem 1rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    button:hover { background: #00ff41; color: #0d0d0d; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #1a4a1a;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      color: #558c55;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab.active { color: #00ff41; border-bottom-color: #00ff41; }
+
+    .output {
+      min-height: 220px;
+      background: #0a0a0a;
+      border: 1px solid #1a4a1a;
+      border-radius: 3px;
+      padding: 1rem;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
+      max-height: 420px;
+    }
+
+    .output.hidden { display: none; }
+
+    .status {
+      color: #558c55;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      min-height: 1.2em;
+      letter-spacing: 0.05em;
+    }
+
+    .blink { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .json-key   { color: #89ddff; }
+    .json-str   { color: #c3e88d; }
+    .json-num   { color: #f78c6c; }
+    .json-bool  { color: #ff5370; }
+  </style>
+</head>
+<body>
+
+<h1>&gt; THE CODE WHISPERER_</h1>
+<p class="subtitle">paste code. hear its soul.</p>
+
+<div class="card">
+  <label for="language">LANGUAGE (optional)</label>
+  <input type="text" id="language" placeholder="e.g. JavaScript, Python, Java" />
+
+  <label for="code">CODE SNIPPET</label>
+  <textarea id="code" placeholder="Paste your code here...">function divide(a, b) {
+  return a / b;
+}</textarea>
+
+  <div class="btn-row">
+    <button id="btnWhisper" onclick="runWhisper()">&#9654; WHISPER NARRATIVE</button>
+    <button id="btnProfile" onclick="runProfile()">&#9670; GENERATE PROFILE</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabNarrative" onclick="switchTab('narrative')">NARRATIVE</div>
+    <div class="tab" id="tabProfile" onclick="switchTab('profile')">PROFILE</div>
+  </div>
+
+  <div class="output" id="outNarrative"></div>
+  <div class="output hidden" id="outProfile"></div>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  let activeTab = 'narrative';
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('outNarrative').classList.toggle('hidden', tab !== 'narrative');
+    document.getElementById('outProfile').classList.toggle('hidden', tab !== 'profile');
+    document.getElementById('tabNarrative').classList.toggle('active', tab === 'narrative');
+    document.getElementById('tabProfile').classList.toggle('active', tab === 'profile');
+  }
+
+  function setStatus(msg, blink = false) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.classList.toggle('blink', blink);
+  }
+
+  function setDisabled(state) {
+    document.getElementById('btnWhisper').disabled = state;
+    document.getElementById('btnProfile').disabled = state;
+  }
+
+  async function runWhisper() {
+    const code = document.getElementById('code').value.trim();
+    const language = document.getElementById('language').value.trim() || null;
+    if (!code) { setStatus('⚠ paste some code first'); return; }
+
+    switchTab('narrative');
+    const out = document.getElementById('outNarrative');
+    out.textContent = '';
+    setDisabled(true);
+    setStatus('▶ streaming narrative...', true);
+
+    try {
+      const resp = await fetch('/api/whisper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, language })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        out.textContent = '⚠ ' + (err.detail || resp.statusText);
+        setStatus('error');
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        // SSE lines start with "data: "
+        chunk.split('\n').forEach(line => {
+          if (line.startsWith('data:')) {
+            out.textContent += line.slice(5);
+          }
+        });
+        out.scrollTop = out.scrollHeight;
+      }
+      setStatus('✓ done');
+    } catch (e) {
+      out.textContent = '⚠ ' + e.message;
+      setStatus('error');
+    } finally {
+      setDisabled(false);
+      document.getElementById('status').classList.remove('blink');
+    }
+  }
+
+  async function runProfile() {
+    const code = document.getElementById('code').value.trim();
+    const language = document.getElementById('language').value.trim() || null;
+    if (!code) { setStatus('⚠ paste some code first'); return; }
+
+    switchTab('profile');
+    const out = document.getElementById('outProfile');
+    out.textContent = '';
+    setDisabled(true);
+    setStatus('▶ generating profile...', true);
+
+    try {
+      const resp = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, language })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        out.textContent = '⚠ ' + (data.detail || resp.statusText);
+        setStatus('error');
+        return;
+      }
+      out.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+      setStatus('✓ done');
+    } catch (e) {
+      out.textContent = '⚠ ' + e.message;
+      setStatus('error');
+    } finally {
+      setDisabled(false);
+      document.getElementById('status').classList.remove('blink');
+    }
+  }
+
+  function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      match => {
+        let cls = 'json-num';
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? 'json-key' : 'json-str';
+        } else if (/true|false/.test(match)) {
+          cls = 'json-bool';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      }
+    );
+  }
+</script>
+</body>
+</html>
