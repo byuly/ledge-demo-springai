@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api")
@@ -27,7 +28,7 @@ public class WhisperController {
     }
 
     @PostMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CodeProfile profile(@Valid @RequestBody WhisperRequest req) {
+    public Mono<CodeProfile> profile(@Valid @RequestBody WhisperRequest req) {
         return whisperService.generateProfile(req);
     }
 }

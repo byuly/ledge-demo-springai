@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,15 +37,17 @@ public class WhisperService {
                 .content();
     }
 
-    public CodeProfile generateProfile(WhisperRequest request) {
-        var converter = new BeanOutputConverter<>(CodeProfile.class);
-        String systemText = loadPrompt(profileSystemPrompt)
-                .replace("{format}", converter.getFormat());
-        return chatClient.prompt()
-                .system(systemText)
-                .user(buildProfilePrompt(request))
-                .call()
-                .entity(converter);
+    public Mono<CodeProfile> generateProfile(WhisperRequest request) {
+        return Mono.fromCallable(() -> {
+            var converter = new BeanOutputConverter<>(CodeProfile.class);
+            String systemText = loadPrompt(profileSystemPrompt)
+                    .replace("{format}", converter.getFormat());
+            return chatClient.prompt()
+                    .system(systemText)
+                    .user(buildProfilePrompt(request))
+                    .call()
+                    .entity(converter);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     private String loadPrompt(Resource resource) {
